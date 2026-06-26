@@ -9,7 +9,7 @@ type JwksResolver = ReturnType<typeof createRemoteJWKSet>;
 
 /**
  * Verifies a Bearer JWT and maps it to a UserContext. Supports a remote JWKS
- * (production, e.g. a Supabase or Auth0 issuer) or a shared HS256 secret for
+ * (production, e.g. an external JWKS issuer) or a shared HS256 secret for
  * local development and tests. Returns null for any invalid token; the caller
  * maps that to 401.
  */

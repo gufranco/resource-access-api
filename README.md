@@ -140,7 +140,7 @@ node dist/main.js
 Three signals, pipeline-ready.
 
 - **Logs:** structured JSON via pino. Every request gets an `x-request-id` (honored from the inbound header or generated) bound to the logger and echoed on the response, so a log line and any error share a correlation id. The `x-user-id`, `authorization`, and `cookie` headers are redacted.
-- **Metrics:** a Prometheus endpoint at `/metrics` exposes default process metrics plus RED-style HTTP metrics (`http_requests_total`, `http_request_duration_seconds`) labeled by method, route, and status. Scrape it with Prometheus, the Grafana Agent, or a Datadog OpenMetrics check. Toggle with `METRICS_ENABLED`.
+- **Metrics:** a Prometheus endpoint at `/metrics` exposes default process metrics plus RED-style HTTP metrics (`http_requests_total`, `http_request_duration_seconds`) labeled by method, route, and status. Scrape it with Prometheus or any OpenMetrics-compatible collector. Toggle with `METRICS_ENABLED`.
 - **Traces:** OpenTelemetry auto-instrumentation for HTTP, Postgres, and Redis, exporting over OTLP. Off by default; enable with `OTEL_ENABLED=true` and point `OTEL_EXPORTER_OTLP_ENDPOINT` at a collector. See [src/observability/tracing.ts](src/observability/tracing.ts).
 
 A full local observability stack ships in `docker-compose.yml` behind a profile: an OpenTelemetry Collector, Prometheus, Grafana Tempo, and Grafana. Bring it up alongside the datastores with:
@@ -165,7 +165,7 @@ Identity resolves in a single guard, selected by `AUTH_MODE`.
 - `header` (default): reads `x-user-id` and resolves the user from the database. A development stand-in matching the baseline contract.
 - `jwt`: verifies a Bearer token's signature, issuer, audience, and expiry through a remote JWKS (production) or a shared secret (local), then maps the `sub` and `role` claims to the request identity. See [src/auth/jwt-verifier.ts](src/auth/jwt-verifier.ts).
 
-The rest of the system depends only on the resolved identity, so switching modes touches nothing downstream. This maps to the platform's auth-migration path, including Supabase JWTs.
+The rest of the system depends only on the resolved identity, so switching modes touches nothing downstream. It is a standard JWT-based auth path.
 
 ## Performance
 
@@ -193,7 +193,7 @@ Query-level evidence (`EXPLAIN ANALYZE` showing index usage, no sequential scans
 - Rate limiting via `@nestjs/throttler`, configured by `RATE_LIMIT_TTL_MS` and `RATE_LIMIT_MAX`.
 - Errors are RFC 7807 `application/problem+json`; internal failures never leak a stack trace or message.
 - Environment is validated at startup and fails fast on a missing or malformed variable.
-- The access-control task closes a Broken Object Level Authorization gap. The full OWASP API Security Top 10 mapping is in [docs/security-owasp.md](docs/security-owasp.md), and the row-level-security model and its Postgres and Supabase equivalents are in [docs/rls.md](docs/rls.md).
+- The access-control task closes a Broken Object Level Authorization gap. The full OWASP API Security Top 10 mapping is in [docs/security-owasp.md](docs/security-owasp.md), and the row-level-security model and its Postgres policy equivalent is in [docs/rls.md](docs/rls.md).
 
 ## Decisions
 
@@ -212,8 +212,8 @@ Each decision below states what was chosen and why.
 - **Index choices.** `resource_shares(user_id)` serves the shared-with-me lookup that the table's primary key cannot, since its leading column is `resource_id`. `(created_at, id)` and `(owner_id, created_at, id)` back keyset ordering for the global and owner-scoped paths. Each is justified with `EXPLAIN ANALYZE` in [PR_DESCRIPTION.md](PR_DESCRIPTION.md).
 - **Transactions.** Multi-statement migrations run inside a transaction; the concurrent-index migration runs outside one because `CREATE INDEX CONCURRENTLY` requires it.
 - **Redis response cache.** Hot read paths are cached per user and per query with a configurable TTL. The cache is best-effort: a Redis outage logs and falls through to the database, never failing a request.
-- **Three observability signals, not just logs.** pino for logs, Prometheus `/metrics` for RED metrics, and OpenTelemetry for traces across HTTP, Postgres, and Redis. Metrics and traces are env-toggleable so they cost nothing when off. This matches the platform's monitoring stack (Datadog, CloudWatch, Grafana).
-- **Pluggable authentication via `AUTH_MODE`.** The header stub and a JWKS/JWT verifier sit behind one guard interface. The system depends only on the resolved identity, so moving from the stub to real JWTs, including Supabase tokens, is a configuration change, not a rewrite.
+- **Three observability signals, not just logs.** pino for logs, Prometheus `/metrics` for RED metrics, and OpenTelemetry for traces across HTTP, Postgres, and Redis. Metrics and traces are env-toggleable so they cost nothing when off. A local Grafana, Prometheus, and Tempo stack ships in docker-compose for visualizing all three.
+- **Pluggable authentication via `AUTH_MODE`.** The header stub and a JWKS/JWT verifier sit behind one guard interface. The system depends only on the resolved identity, so moving from the stub to real JWTs is a configuration change, not a rewrite.
 
 ## License
 

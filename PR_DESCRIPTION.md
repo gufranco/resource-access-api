@@ -13,8 +13,8 @@ Makes `GET /resources` production-ready with filtering, keyset pagination, and i
 - **Schema and indexes.** Added `CHECK` constraints on `type` and `status`, an index on `resource_shares(user_id)`, and `(created_at, id)` plus `(owner_id, created_at, id)` indexes on `resources`. The access-control and pagination indexes are created with `CREATE INDEX CONCURRENTLY` in a separate migration so they build without locking the table.
 - **Hardening.** Helmet, configurable CORS, rate limiting, RFC 7807 error responses, startup environment validation, graceful shutdown, structured pino logging with request ids, and liveness and readiness health checks.
 - **Observability.** Prometheus `/metrics` with RED-style HTTP metrics and OpenTelemetry tracing across HTTP, Postgres, and Redis, both env-toggleable.
-- **Authentication.** A pluggable guard selected by `AUTH_MODE`: the `x-user-id` stub for development and a JWKS/JWT verifier for production, the latter mapping to Supabase tokens.
-- **Docs.** OWASP API Top 10 mapping, a row-level-security model with Postgres and Supabase equivalents, and a zero-downtime migration ADR under `docs/`.
+- **Authentication.** A pluggable guard selected by `AUTH_MODE`: the `x-user-id` stub for development and a JWKS/JWT verifier for production, the latter for standard JWT issuers.
+- **Docs.** OWASP API Top 10 mapping, a row-level-security model with its Postgres policy equivalent, and a zero-downtime migration ADR under `docs/`.
 
 ## Testing
 

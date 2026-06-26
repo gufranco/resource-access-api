@@ -7,7 +7,7 @@ type HttpLabel = 'method' | 'route' | 'status';
 
 /**
  * Prometheus registry plus RED-style HTTP metrics. The /metrics endpoint
- * exposes these for a Prometheus, Grafana Agent, or Datadog OpenMetrics scrape.
+ * exposes these for a Prometheus or any OpenMetrics-compatible scrape.
  */
 @Injectable()
 export class MetricsService {

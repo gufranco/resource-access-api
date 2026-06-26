@@ -1,6 +1,6 @@
 # Row-level security: app-layer policy and its database equivalent
 
-The visibility rule in this service is row-level security. It is enforced at the application layer today, in one place, and it maps cleanly to Postgres `CREATE POLICY` and to Supabase RLS. This document shows both and explains the trade-off.
+The visibility rule in this service is row-level security. It is enforced at the application layer today, in one place, and it maps cleanly to a Postgres `CREATE POLICY` row-level-security policy. This document shows both and explains the trade-off.
 
 ## The rule
 
@@ -31,26 +31,7 @@ CREATE POLICY resources_visibility ON resources
   );
 ```
 
-The application would set `app.user_id` per connection or transaction. Admins would either bypass via a role with `BYPASSRLS` or a policy branch on a claim.
-
-## The Supabase equivalent
-
-Supabase runs the same Postgres RLS, keyed off the authenticated JWT rather than a session variable:
-
-```sql
-CREATE POLICY resources_visibility ON resources
-  FOR SELECT
-  USING (
-    owner_id = (auth.jwt() ->> 'sub')::bigint
-    OR EXISTS (
-      SELECT 1 FROM resource_shares rs
-      WHERE rs.resource_id = resources.id
-        AND rs.user_id = (auth.jwt() ->> 'sub')::bigint
-    )
-  );
-```
-
-The JWT mode in this service ([src/auth/jwt-verifier.ts](../src/auth/jwt-verifier.ts)) already verifies a token's `sub` and role, which is the same claim Supabase RLS reads.
+The application sets `app.user_id` per connection or transaction from the authenticated identity. When the JWT auth mode is active, that value is the verified token's `sub` claim, resolved in [src/auth/jwt-verifier.ts](../src/auth/jwt-verifier.ts), so the policy keys off the same identity the application already trusts. Admins either bypass via a role with `BYPASSRLS` or a policy branch on a role claim.
 
 ## Why app-layer here, and when to move to the database
 

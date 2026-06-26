@@ -15,7 +15,7 @@ function tracingEnabled(): boolean {
  * Starts OpenTelemetry tracing when OTEL_ENABLED is set. Must run before the
  * application imports instrumented libraries (HTTP, pg, ioredis), so main.ts
  * imports and calls this first. Traces export over OTLP/HTTP to a collector,
- * Grafana Tempo, or a Datadog OTLP intake.
+ * Grafana Tempo, or any OTLP-compatible backend.
  */
 export function startTracing(): void {
   if (!tracingEnabled()) {

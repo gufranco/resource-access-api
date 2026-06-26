@@ -32,11 +32,11 @@ A change that would break existing readers or writers is split into steps that a
 
 Each step ships as its own migration and its own deploy, so a rollback is always one step back.
 
-## Applying this to a Supabase to Aurora Postgres cutover
+## Applying this to a zero-downtime Postgres host migration
 
 The same discipline scales to a host migration with no downtime:
 
-- Stand up logical replication from the source to Aurora and let it catch up.
+- Stand up logical replication from the source host to the target host and let it catch up.
 - Validate row counts and checksums per table before any switch. A validation script that compares counts and a hash of each table is the gate, not a vibe.
 - Cut writes over during a short, planned window using a connection-string switch behind the application's configuration, not a redeploy of business logic.
 - Keep replication running in reverse for a rollback window.
