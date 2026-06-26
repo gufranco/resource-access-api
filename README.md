@@ -66,6 +66,19 @@ All three listing endpoints share a single data-access function and scope to the
 curl -H 'x-user-id: 2' 'http://localhost:3000/resources?type=doc&status=published&limit=10'
 ```
 
+### Authentication and seed users
+
+The `x-user-id` header carries a user id, the stand-in for real authentication. The deterministic seed (`pnpm run db:seed`) creates four users, so use one of these ids as the header value:
+
+| `x-user-id` | Name | Role | What they see |
+|-------------|------|------|---------------|
+| `1` | Alice | admin | every resource |
+| `2` | Bob | member | resources they own or that are shared with them |
+| `3` | Carol | member | resources they own or that are shared with them |
+| `4` | Dave | member | resources they own or that are shared with them |
+
+Use `1` to browse everything as an admin, or `2` to `4` for the member-scoped view. In Swagger UI at `/docs`, click **Authorize** and enter the id (for example `1`) in the `x-user-id` value box, then try the endpoints. Scoped endpoints called without a valid id return 401; `/docs`, `/health/live`, `/health/ready`, and `/metrics` are public.
+
 ## Folder structure
 
 ```
@@ -159,6 +172,11 @@ docker compose --profile observability up -d
 | OTel Collector | localhost:4317 / 4318 | Receives OTLP traces from the app |
 
 With the stack up, run the app with `OTEL_ENABLED=true` and `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318` so traces flow to the collector and into Tempo. Collector, Prometheus, Tempo, and Grafana config live under [deploy/](deploy).
+
+Grafana auto-loads two provisioned dashboards (no manual import):
+
+- **Metrics** (Prometheus): requests per second, p99 latency, 5xx rate, total requests, and request-rate and latency-percentile time series, at http://localhost:3001/d/api-metrics/resource-access-api-metrics
+- **Traces** (Tempo): a table of recent traces; click a Trace ID for the full span waterfall across HTTP, Postgres, and Redis, at http://localhost:3001/d/api-traces/resource-access-api-traces
 
 ## Authentication
 
