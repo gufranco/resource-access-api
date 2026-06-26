@@ -1,6 +1,8 @@
-allowBuilds:
-  protobufjs: set this to true or false
 onlyBuiltDependencies:
   - '@swc/core'
   - esbuild
   - protobufjs
+ignoredBuiltDependencies:
+  - '@scarf/scarf'
+overrides:
+  multer: '>=2.2.0'
