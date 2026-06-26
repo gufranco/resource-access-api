@@ -70,6 +70,7 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: admin
     volumes:
       - ./deploy/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./deploy/grafana/dashboards:/etc/grafana/dashboards:ro
       - grafana_data:/var/lib/grafana
     ports:
       - '3001:3000'

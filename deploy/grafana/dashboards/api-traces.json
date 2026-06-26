@@ -1,0 +1,42 @@
+{
+  "uid": "api-traces",
+  "title": "Resource Access API - Traces",
+  "tags": ["resource-access-api"],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "10s",
+  "time": { "from": "now-30m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "text",
+      "title": "About",
+      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 0 },
+      "options": {
+        "mode": "markdown",
+        "content": "Recent traces from the Resource Access API, captured by OpenTelemetry across HTTP, Postgres, and Redis. Click a **Trace ID** to open the full span waterfall. Enable tracing on the app with `OTEL_ENABLED=true` and `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318`."
+      }
+    },
+    {
+      "id": 2,
+      "type": "table",
+      "title": "Recent traces",
+      "gridPos": { "h": 18, "w": 24, "x": 0, "y": 4 },
+      "datasource": { "type": "tempo", "uid": "tempo" },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": { "type": "tempo", "uid": "tempo" },
+          "queryType": "traceqlSearch",
+          "filters": [
+            { "id": "limit", "operator": "=", "scope": "intrinsic", "tag": "limit", "value": 20 }
+          ],
+          "limit": 20,
+          "tableType": "traces"
+        }
+      ],
+      "options": { "showHeader": true }
+    }
+  ]
+}
