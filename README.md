@@ -89,6 +89,7 @@ test/          end-to-end suite and setup
 | `pnpm run start:dev` | Run with reload |
 | `pnpm run db:migrate` | Apply pending SQL migrations |
 | `pnpm run db:seed` | Load the deterministic functional seed |
+| `pnpm run db:seed:demo` | Load 100 unique faker-generated rows per table |
 | `pnpm run db:seed:bench` | Load a large randomized dataset for EXPLAIN evidence |
 | `pnpm run lint` | ESLint, zero warnings |
 | `pnpm run format` | Prettier check |
@@ -104,10 +105,11 @@ pnpm run db:migrate
 
 ## Seeds
 
-The functional seed in [src/database/scripts/seed.ts](src/database/scripts/seed.ts) is deterministic: fixed ids, counts, and shares, so tests assert exact rows. The benchmark seed in [src/database/scripts/seed-bench.ts](src/database/scripts/seed-bench.ts) loads tens of thousands of rows with ids at or above 1,000,000 so the query planner exercises the indexes. Volume scales with `SEED_SCALE`.
+The functional seed in [src/database/scripts/seed.ts](src/database/scripts/seed.ts) is deterministic: fixed ids, counts, and shares, so tests assert exact rows. The demo seed in [src/database/scripts/seed-demo.ts](src/database/scripts/seed-demo.ts) generates 100 unique faker rows in each of `users`, `resources`, and `resource_shares` for a richer local dataset; uniqueness is guaranteed by construction and it is reproducible via a fixed faker seed. The benchmark seed in [src/database/scripts/seed-bench.ts](src/database/scripts/seed-bench.ts) loads tens of thousands of rows with ids at or above 1,000,000 so the query planner exercises the indexes, with volume scaled by `SEED_SCALE`.
 
 ```bash
-pnpm run db:seed
+pnpm run db:seed         # deterministic, what the tests use
+pnpm run db:seed:demo    # 100 unique faker rows per table
 SEED_SCALE=1 pnpm run db:seed:bench
 ```
 

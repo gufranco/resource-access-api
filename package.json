@@ -24,7 +24,8 @@
     "db:migrate": "tsx src/database/scripts/migrate.ts",
     "db:seed": "tsx src/database/scripts/seed.ts",
     "db:seed:bench": "tsx src/database/scripts/seed-bench.ts",
-    "loadtest": "bash scripts/load-test.sh"
+    "loadtest": "bash scripts/load-test.sh",
+    "db:seed:demo": "tsx src/database/scripts/seed-demo.ts"
   },
   "dependencies": {
     "@nestjs/common": "11.1.27",
