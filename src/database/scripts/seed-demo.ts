@@ -25,7 +25,7 @@ function loadEnv(): void {
   }
 }
 
-function buildUsers(): typeof users.$inferInsert[] {
+function buildUsers(): (typeof users.$inferInsert)[] {
   return Array.from({ length: COUNT }, (_unused, index) => ({
     id: index + 1,
     name: faker.person.fullName(),
@@ -33,7 +33,7 @@ function buildUsers(): typeof users.$inferInsert[] {
   }));
 }
 
-function buildResources(): typeof resources.$inferInsert[] {
+function buildResources(): (typeof resources.$inferInsert)[] {
   return Array.from({ length: COUNT }, (_unused, index) => {
     const createdAt = new Date(BASE_TIME + index * 3600 * 1000);
     return {
@@ -49,13 +49,13 @@ function buildResources(): typeof resources.$inferInsert[] {
 }
 
 function buildShares(
-  resourceRows: typeof resources.$inferInsert[],
-): typeof resourceShares.$inferInsert[] {
+  resourceRows: (typeof resources.$inferInsert)[],
+): (typeof resourceShares.$inferInsert)[] {
   // One share per resource (distinct resource_id => the pair is always unique),
   // shared with the user after the owner so user_id is never the owner.
   return resourceRows.map((row) => ({
     resourceId: row.id,
-    userId: ((row.ownerId) % COUNT) + 1,
+    userId: (row.ownerId % COUNT) + 1,
   }));
 }
 
