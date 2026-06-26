@@ -141,7 +141,22 @@ Three signals, pipeline-ready.
 
 - **Logs:** structured JSON via pino. Every request gets an `x-request-id` (honored from the inbound header or generated) bound to the logger and echoed on the response, so a log line and any error share a correlation id. The `x-user-id`, `authorization`, and `cookie` headers are redacted.
 - **Metrics:** a Prometheus endpoint at `/metrics` exposes default process metrics plus RED-style HTTP metrics (`http_requests_total`, `http_request_duration_seconds`) labeled by method, route, and status. Scrape it with Prometheus, the Grafana Agent, or a Datadog OpenMetrics check. Toggle with `METRICS_ENABLED`.
-- **Traces:** OpenTelemetry auto-instrumentation for HTTP, Postgres, and Redis, exporting over OTLP. Off by default; enable with `OTEL_ENABLED=true` and point `OTEL_EXPORTER_OTLP_ENDPOINT` at a collector, Grafana Tempo, or a Datadog OTLP intake. See [src/observability/tracing.ts](src/observability/tracing.ts).
+- **Traces:** OpenTelemetry auto-instrumentation for HTTP, Postgres, and Redis, exporting over OTLP. Off by default; enable with `OTEL_ENABLED=true` and point `OTEL_EXPORTER_OTLP_ENDPOINT` at a collector. See [src/observability/tracing.ts](src/observability/tracing.ts).
+
+A full local observability stack ships in `docker-compose.yml` behind a profile: an OpenTelemetry Collector, Prometheus, Grafana Tempo, and Grafana. Bring it up alongside the datastores with:
+
+```bash
+docker compose --profile observability up -d
+```
+
+| Service | URL | Purpose |
+|---------|-----|---------|
+| Grafana | http://localhost:3001 | Dashboards over Prometheus and Tempo (anonymous admin) |
+| Prometheus | http://localhost:9090 | Scrapes the app's `/metrics` |
+| Tempo | http://localhost:3200 | Trace storage |
+| OTel Collector | localhost:4317 / 4318 | Receives OTLP traces from the app |
+
+With the stack up, run the app with `OTEL_ENABLED=true` and `OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318` so traces flow to the collector and into Tempo. Collector, Prometheus, Tempo, and Grafana config live under [deploy/](deploy).
 
 ## Authentication
 
