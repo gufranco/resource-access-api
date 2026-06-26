@@ -235,6 +235,21 @@ Each decision below states what was chosen and why.
 - **Three observability signals, not just logs.** pino for logs, Prometheus `/metrics` for RED metrics, and OpenTelemetry for traces across HTTP, Postgres, and Redis. Metrics and traces are env-toggleable so they cost nothing when off. A local Grafana, Prometheus, and Tempo stack ships in docker-compose for visualizing all three.
 - **Pluggable authentication via `AUTH_MODE`.** The header stub and a JWKS/JWT verifier sit behind one guard interface. The system depends only on the resolved identity, so moving from the stub to real JWTs is a configuration change, not a rewrite.
 
+## What I'd do with more time
+
+- Back the application access rule with a Postgres row-level-security policy as a database-level backstop, so a stray raw query cannot bypass it. The policy is already sketched in [docs/rls.md](docs/rls.md).
+- Add write endpoints with idempotency keys and wire the cache to invalidate per user and per query on writes; today the cache has no invalidation because the API is read-only.
+- Run the JWT mode against a real issuer end to end, including key rotation and refresh-token handling.
+- Add consumer-driven contract tests and a CI performance-regression gate on p95 latency and bundle size.
+- Ship the Grafana dashboards with alerting rules and a recording-rule layer, rather than just panels.
+
+## Open questions and assumptions
+
+- `GET /users/:userId/resources` returns resources owned by the target user. I chose owned-by as the least surprising reading of the path; returning resources visible to the target is a defensible alternative that needs a product decision.
+- Admin currently sees everything. Once a tenant or organization boundary exists, admins should almost certainly be scoped to their tenant; I assumed a single global scope for this exercise.
+- The `x-user-id` header is a deliberate development stand-in for authentication, kept to match the baseline contract. I assumed the JWT mode is the real production path. The authentication source is worth confirming.
+- I treated the deterministic seed's ids, counts, and shares as a contract the tests can rely on, and kept them stable rather than randomizing the functional seed.
+
 ## License
 
 MIT.

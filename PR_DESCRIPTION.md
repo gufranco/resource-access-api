@@ -68,6 +68,15 @@ No sequential scans on the hot paths; all three plans are sub-millisecond at 50k
 
 HTTP load test with autocannon, 50 connections for 10 seconds against `GET /resources?limit=20` with caching enabled: roughly 6,000 requests per second, 60,000 requests in 10 seconds, latency p50 7 ms, p97.5 15 ms, p99 20 ms. Reproduce with `pnpm run loadtest` while the app runs with a raised `RATE_LIMIT_MAX`.
 
+### What could break for other callers, and how I verified it
+
+The risky part of this change is not `GET /resources`; it is that the access-control rule lives in the one shared `findResources` path that also backs `/resources/recent` and `/users/:userId/resources`. Adding mandatory user scoping to that path can regress the other two callers in ways that are easy to miss:
+
+- `/resources/recent` must keep returning the caller's ten most recent visible resources, not the global ten and not a differently ordered set. A naive scoping change could over-filter it or break the `created_at DESC, id DESC` ordering.
+- `/users/:userId/resources` must compose its owner filter with the visibility predicate without leaking another user's rows, and without an admin accidentally being scoped down.
+
+How I verified it did not regress: the end-to-end suite drives all three endpoints against the real database and asserts exact, seed-derived results per role rather than just status codes. Admin sees all 30; member 2 sees exactly 9 (8 owned plus the one shared, id 1) and never sees id 3, which they neither own nor are shared; `/resources/recent` returns the caller's most-recent set in descending order; `/users/2/resources` returns exactly the 8 rows owned by user 2; a member listing another user gets 403 and an unauthenticated caller gets 401. Because these assertions pin counts and specific ids, any change that broke scoping for one of the shared callers fails a test rather than slipping through.
+
 ## Trade-offs
 
 - The `x-user-id` header is kept as the identity source to match the baseline contract. The guard depends only on a resolved `UserContext`, so swapping in a JWT or JWKS verifier is a contained change.
