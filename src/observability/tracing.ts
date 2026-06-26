@@ -14,20 +14,19 @@ function tracingEnabled(): boolean {
 /**
  * Starts OpenTelemetry tracing when OTEL_ENABLED is set. Must run before the
  * application imports instrumented libraries (HTTP, pg, ioredis), so main.ts
- * imports and calls this first. Traces export over OTLP/HTTP to a collector,
+ * imports and calls this first. The exporter reads OTEL_EXPORTER_OTLP_ENDPOINT
+ * and appends the standard /v1/traces path, sending spans to an OTLP collector,
  * Grafana Tempo, or any OTLP-compatible backend.
  */
 export function startTracing(): void {
   if (!tracingEnabled()) {
     return;
   }
-  const endpoint = process.env.OTEL_EXPORTER_OTLP_ENDPOINT;
-  const exporter = new OTLPTraceExporter(endpoint !== undefined ? { url: endpoint } : {});
   sdk = new NodeSDK({
     resource: resourceFromAttributes({
       [ATTR_SERVICE_NAME]: process.env.OTEL_SERVICE_NAME ?? 'resource-access-api',
     }),
-    traceExporter: exporter,
+    traceExporter: new OTLPTraceExporter(),
     instrumentations: [getNodeAutoInstrumentations()],
   });
   sdk.start();
