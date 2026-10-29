@@ -2,6 +2,10 @@
 
 A REST API over PostgreSQL that lists resources with user-scoped visibility, type and status filtering, and keyset pagination. Built with NestJS, Drizzle ORM, and Zod.
 
+[![ci](https://img.shields.io/github/actions/workflow/status/gufranco/resource-access-api/ci.yml?branch=main&style=flat-square&label=ci)](https://github.com/gufranco/resource-access-api/actions/workflows/ci.yml)
+[![coverage](https://img.shields.io/badge/coverage-95%25-brightgreen?style=flat-square)](https://github.com/gufranco/resource-access-api/actions/workflows/ci.yml)
+[![license](https://img.shields.io/github/license/gufranco/resource-access-api?style=flat-square&label=license)](LICENSE)
+
 ## Reviewer guide
 
 A fast map from concern to where it lives.
